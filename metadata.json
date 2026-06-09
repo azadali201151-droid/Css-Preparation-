@@ -1,0 +1,6 @@
+{
+  "name": "CSS Prep Pro",
+  "description": "Comprehensive preparation platform for CSS aspirants featuring AI-powered mentorship, subject resources for all compulsory and optional subjects, a community forum, and an English-to-Urdu dictionary.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

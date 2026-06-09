@@ -1,0 +1,186 @@
+{
+  "entities": {
+    "subject": {
+      "title": "Subject",
+      "description": "Educational subject for CSS preparation",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "group": { "type": "string" },
+        "isCompulsory": { "type": "boolean" },
+        "description": { "type": "string" },
+        "syllabus": { "type": "string" },
+        "resources": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["id", "name", "isCompulsory"]
+    },
+    "forumPost": {
+      "title": "Forum Post",
+      "description": "A community discussion post",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["title", "content", "authorId", "authorName", "createdAt"]
+    },
+    "comment": {
+      "title": "Comment",
+      "description": "A comment on a forum post",
+      "type": "object",
+      "properties": {
+        "content": { "type": "string" },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["content", "authorId", "authorName", "createdAt"]
+    },
+    "userProfile": {
+      "title": "User Profile",
+      "description": "User account information and progress",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "joinedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "testHistory": {
+      "title": "Test History",
+      "description": "Saved subjective tests or objective MCQs for a specific topic",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "subjectId": { "type": "string" },
+        "subjectName": { "type": "string" },
+        "topic": { "type": "string" },
+        "type": { "type": "string", "enum": ["subjective", "objective", "guidance", "evaluation"] },
+        "data": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "subjectId", "topic", "type", "data", "createdAt"]
+    },
+    "testAttempt": {
+      "title": "Test Attempt",
+      "description": "Record of an AI-generated test taken by a user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "subjectId": { "type": "string" },
+        "score": { "type": "number" },
+        "totalQuestions": { "type": "number" },
+        "feedback": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "subjectId", "score", "createdAt"]
+    },
+    "cachedDictionary": {
+      "title": "Cached Dictionary",
+      "description": "AI-generated dictionary results for reuse",
+      "type": "object",
+      "properties": {
+        "word": { "type": "string" },
+        "urduMeanings": { "type": "array", "items": { "type": "string" } },
+        "pronunciation": { "type": "string" },
+        "explanationUrdu": { "type": "string" },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "english": { "type": "string" },
+              "urdu": { "type": "string" }
+            }
+          }
+        },
+        "lastUsed": { "type": "string", "format": "date-time" }
+      },
+      "required": ["word", "urduMeanings", "pronunciation", "explanationUrdu"]
+    },
+    "cachedSyllabus": {
+      "title": "Cached Syllabus",
+      "description": "AI-generated syllabus breakdowns",
+      "type": "object",
+      "properties": {
+        "subjectId": { "type": "string" },
+        "breakdown": { "type": "array", "items": { "type": "string" } },
+        "lastUpdated": { "type": "string", "format": "date-time" }
+      }
+    },
+    "cachedTopicGuidance": {
+      "title": "Cached Topic Guidance",
+      "description": "AI-generated study material for topics",
+      "type": "object",
+      "properties": {
+        "topicId": { "type": "string" },
+        "content": { "type": "string" },
+        "lastUpdated": { "type": "string", "format": "date-time" }
+      }
+    },
+    "userDictionaryHistory": {
+      "title": "User Dictionary History",
+      "description": "Personal history of words searched by a user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "word": { "type": "string" },
+        "result": { "type": "object" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "word", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/dictionaryHistory/{historyId}": {
+      "schema": "userDictionaryHistory",
+      "description": "User's personal dictionary search history"
+    },
+    "/cachedDictionary/{wordId}": {
+      "schema": "cachedDictionary",
+      "description": "Global cache for dictionary results to avoid redundant AI calls"
+    },
+    "/cachedSyllabus/{subjectId}": {
+      "schema": "cachedSyllabus",
+      "description": "Global cache for syllabus breakdowns"
+    },
+    "/cachedTopicGuidance/{topicId}": {
+      "schema": "cachedTopicGuidance",
+      "description": "Global cache for study material guidance"
+    },
+    "/subjects/{subjectId}": {
+      "schema": "subject",
+      "description": "List of CSS subjects and resources"
+    },
+    "/forumPosts/{postId}": {
+      "schema": "forumPost",
+      "description": "Community forum discussions"
+    },
+    "/forumPosts/{postId}/comments/{commentId}": {
+      "schema": "comment",
+      "description": "Comments on forum discussions"
+    },
+    "/userProfiles/{userId}": {
+      "schema": "userProfile",
+      "description": "User metadata and settings"
+    },
+    "/userProfiles/{userId}/testHistory/{historyId}": {
+      "schema": "testHistory",
+      "description": "User's practice test history with saved content/MCQs"
+    },
+    "/userProfiles/{userId}/testAttempts/{attemptId}": {
+      "schema": "testAttempt",
+      "description": "User's practice test history"
+    }
+  }
+}

@@ -1,0 +1,180 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Entity Specific Validations ---
+
+    function isValidSubject(data) {
+      return data.keys().hasAll(['id', 'name', 'isCompulsory'])
+        && data.id is string && data.id.size() <= 64
+        && data.name is string && data.name.size() <= 200
+        && data.isCompulsory is bool
+        && (!data.keys().contains('description') || (data.description is string && data.description.size() <= 2000))
+        && (!data.keys().contains('syllabus') || (data.syllabus is string && data.syllabus.size() <= 5000));
+    }
+
+    function isValidForumPost(data) {
+      return data.keys().hasAll(['title', 'content', 'authorId', 'authorName', 'createdAt'])
+        && data.keys().size() <= 10
+        && data.title is string && data.title.size() <= 300
+        && data.content is string && data.content.size() <= 10000
+        && data.authorId == request.auth.uid
+        && data.authorName is string && data.authorName.size() <= 100
+        && data.createdAt == request.time;
+    }
+
+    function isValidComment(data) {
+      return data.keys().hasAll(['content', 'authorId', 'authorName', 'createdAt'])
+        && data.content is string && data.content.size() <= 5000
+        && data.authorId == request.auth.uid
+        && data.authorName is string && data.authorName.size() <= 100
+        && data.createdAt == request.time;
+    }
+
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['uid', 'email'])
+        && data.uid == request.auth.uid
+        && data.email is string && data.email.size() <= 200;
+    }
+
+    function isValidTestAttempt(data) {
+      return data.keys().hasAll(['userId', 'subjectId', 'score', 'totalQuestions', 'createdAt'])
+        && data.userId == request.auth.uid
+        && data.subjectId is string
+        && data.score is number
+        && data.totalQuestions is number
+        && data.createdAt == request.time;
+    }
+
+    function isValidCachedDictionary(data) {
+      return data.keys().hasAll(['word', 'urduMeanings', 'pronunciation', 'explanationUrdu'])
+        && data.word is string && data.word.size() <= 200
+        && data.urduMeanings is list
+        && data.pronunciation is string
+        && data.explanationUrdu is string;
+    }
+
+    function isValidTestHistory(data) {
+      return data.keys().hasAll(['userId', 'subjectId', 'subjectName', 'topic', 'type', 'data', 'createdAt'])
+        && data.userId == request.auth.uid
+        && data.subjectId is string
+        && data.subjectName is string
+        && data.topic is string
+        && data.type in ['subjective', 'objective', 'guidance', 'evaluation']
+        && data.data is map
+        && data.createdAt == request.time;
+    }
+
+    // --- Collection Rules ---
+
+    match /cachedDictionary/{wordId} {
+      allow read: if true;
+      allow write: if isSignedIn() && isValidId(wordId);
+    }
+
+    match /cachedSyllabus/{subjectId} {
+      allow read: if true;
+      allow write: if isSignedIn() && isValidId(subjectId);
+    }
+
+    match /cachedTopicGuidance/{topicId} {
+      allow read: if true;
+      allow write: if isSignedIn() && isValidId(topicId);
+    }
+    
+    match /cachedTopicNotes/{topicId} {
+      allow read: if true;
+      allow write: if isSignedIn() && isValidId(topicId);
+    }
+
+    match /cachedTopicTests/{topicId} {
+      allow read: if true;
+      allow write: if isSignedIn() && isValidId(topicId);
+    }
+
+    match /cachedTopicMCQs/{topicId} {
+      allow read: if true;
+      allow write: if isSignedIn() && isValidId(topicId);
+    }
+
+    match /cachedEssayTopics/{topicId} {
+      allow read: if true;
+      allow write: if isSignedIn() && isValidId(topicId);
+    }
+
+    match /users/{userId}/dictionaryHistory/{historyId} {
+      allow read, delete: if isOwner(userId);
+      allow create: if isOwner(userId) 
+        && incoming().userId == userId
+        && incoming().timestamp == request.time;
+    }
+
+    match /subjects/{subjectId} {
+      allow read: if true;
+      allow write: if false; 
+    }
+
+    match /forumPosts/{postId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(postId) && isValidForumPost(incoming());
+      allow update: if isOwner(existing().authorId) 
+                    && incoming().authorId == existing().authorId
+                    && incoming().createdAt == existing().createdAt
+                    && isValidForumPost(incoming())
+                    && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'content', 'tags']);
+      allow delete: if isOwner(existing().authorId);
+
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if isSignedIn() && isValidId(commentId) && isValidComment(incoming());
+        allow update: if isOwner(existing().authorId)
+                      && incoming().authorId == existing().authorId
+                      && incoming().createdAt == existing().createdAt
+                      && isValidComment(incoming())
+                      && incoming().diff(existing()).affectedKeys().hasOnly(['content']);
+        allow delete: if isOwner(existing().authorId);
+      }
+    }
+
+    match /userProfiles/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUserProfile(incoming());
+      allow update: if isOwner(userId) && isValidUserProfile(incoming());
+      
+      match /testAttempts/{attemptId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidTestAttempt(incoming());
+      }
+
+      match /testHistory/{historyId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId);
+      }
+    }
+  }
+}
