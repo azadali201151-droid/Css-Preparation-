@@ -5,7 +5,7 @@ import { COMPULSORY_SUBJECTS, OPTIONAL_SUBJECTS } from '../lib/subjectsData';
 import { BookOpen, Brain, FileText, ArrowLeft, Loader2, X, Sparkles, Camera, Upload, CheckSquare, ListTodo, TrendingUp, Download, FileDown, LogOut, Minimize2, Shield, GraduationCap, Cpu, Zap, Users, Globe, History, ClipboardList, AlertCircle } from 'lucide-react';
 import { collection, addDoc, query, where, getDocs, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
-import { getSyllabusBreakdown, getTopicGuidance, getPastPaperStyleTest, evaluateHandwriting, getEssayTopicsForDomain, getTopicMCQs, getFullTopicNotes } from '../services/geminiService';
+import { getTopicGuidance, getPastPaperStyleTest, evaluateHandwriting, getEssayTopicsForDomain, getTopicMCQs, getFullTopicNotes } from '../services/geminiService';
 import ReactMarkdown from 'react-markdown';
 import { PREDEFINED_ESSAY_TOPICS } from '../lib/essayTopics';
 import { jsPDF } from 'jspdf';
@@ -427,27 +427,145 @@ The conclusion is **not** a summary; it is a synthesis.
       } else if (subject.id === 'islamic-studies') {
         setSyllabusTopics(ISLAMIC_STUDIES_SYLLABUS);
       } else {
-        const fetchSyllabus = async () => {
-          setLoadingSyllabus(true);
-          try {
-            const topics = await getSyllabusBreakdown(subject.name);
-            setSyllabusTopics(topics);
-          } catch (e) {
-            // Error handled in service safely
-          } finally {
-            setLoadingSyllabus(false);
+        const getOfflineSyllabus = (name: string, id: string) => {
+          const lowerName = name.toLowerCase();
+          const lowerId = id.toLowerCase();
+          
+          if (lowerId === 'accountancy') {
+            return ["Financial Accounting Principles", "Preparation of Financial Statements", "Cost and Management Accounting", "Auditing Standards & Practices", "Taxation System in Pakistan", "Business Mathematics & Statistics"];
           }
+          if (lowerId === 'computer-science') {
+            return ["Computer Architecture & Organization", "Data Structures & Algorithms", "Operating Systems & Networks", "Software Engineering Concepts", "Database Management Systems", "Artificial Intelligence & Web Technologies"];
+          }
+          if (lowerId === 'physics') {
+            return ["Classical Mechanics & Relativity", "Waves, Optics & Thermodynamics", "Electromagnetism & Circuits", "Quantum Mechanics & Atomic Physics", "Solid State & Nuclear Physics"];
+          }
+          if (lowerId === 'chemistry') {
+            return ["Physical Chemistry Principles", "Inorganic Chemistry Concepts", "Organic Synthesis & Reactions", "Analytical Chemistry & Spectroscopy", "Environmental & Industrial Chemistry"];
+          }
+          if (lowerId === 'pure-mathematics') {
+            return ["Basic Algebra & Group Theory", "Real & Complex Analysis", "Vector Calculus & Coordinate Geometry", "Differential Equations", "Linear Algebra & Matrices"];
+          }
+          if (lowerId === 'applied-mathematics') {
+            return ["Vector Analysis & Kinematics", "Statics & Forces in Equilibrium", "Dynamics of Particles", "Tensor Analysis & Fluid Mechanics", "Numerical Analysis Methods"];
+          }
+          if (lowerId === 'statistics') {
+            return ["Probability Distributions", "Statistical Inference & Hypothesis", "Sampling Techniques & Design", "Regression & Correlation Analysis", "Analysis of Variance (ANOVA)", "Non-Parametric Methods"];
+          }
+          if (lowerId === 'geology') {
+            return ["Physical Geology & Geomorphology", "Mineralogy & Crystallography", "Structural Geology & Tectonics", "Stratigraphy & Paleontology", "Petrology (Igneous, Sedimentary)", "Economic & Engineering Geology"];
+          }
+          if (lowerId === 'business-administration') {
+            return ["Management Principles & Structure", "Marketing Theory & Strategy", "Financial Management Fundamentals", "Human Resource Systems", "Operations & Supply Chain Management", "Strategic Business Planning"];
+          }
+          if (lowerId === 'governance-public-policy') {
+            return ["Concepts of State & Governance", "Public Policy Formulation Processes", "Institutional Reform in Pakistan", "Governance Indicators & Metrics", "Decentralization & Fiscal Federalism", "Global Governance Trends"];
+          }
+          if (lowerId === 'town-planning') {
+            return ["History of Urban Planning", "Urban Sociology & Geography", "Housing & Land Use Planning", "Transportation and Infrastructure Planning", "Environmental Impact Assessment", "Urban Management & Local Admin"];
+          }
+          if (lowerId === 'islamic-history-culture') {
+            return ["Pre-Islamic Arabia & Rise of Islam", "Pious Caliphate (Khulafa-e-Rashideen)", "Umayyad and Abbasid Dynasties", "Golden Age of Science & Arts", "Muslim Rule in Spain & Ottoman Empire", "Modern Islamic Renaissance Movements"];
+          }
+          if (lowerId === 'british-history') {
+            return ["Glorious Revolution to Hanoverians", "Industrial Revolution & Social Impact", "Expansion of the British Empire", "World Wars and Britain's Role", "Decline of Empire and Post-War Era", "Thatcherism & Contemporary Britain"];
+          }
+          if (lowerId === 'european-history') {
+            return ["French Revolution and Republicanism", "Napoleonic Era and Congress of Vienna", "Unification of Italy & Germany", "Imperialism & Road to World War I", "Interwar Period & Rise of Fascism", "World War II and Cold War Europe", "European Union & Post-Soviet Era"];
+          }
+          if (lowerId === 'gender-studies') {
+            return ["Introduction to Gender & Feminism", "Social Construction of Gender", "Feminist Theories & Perspectives", "Gender and Development (WID, WAD, GAD)", "Status of Women in Pakistan", "Gender-based Violence & Legal Protections"];
+          }
+          if (lowerId === 'environmental-sciences') {
+            return ["Ecosystems & Biodiversity", "Environmental Pollution & Control", "Climate Change Impacts & Policies", "Natural Resource Management", "Renewable Energy Technology", "Environmental Laws in Pakistan"];
+          }
+          if (lowerId === 'agriculture-forestry') {
+            return ["Soil Science & Crop Production", "Horticulture & Plant Pathology", "Water Resources & Irrigation Management", "Forest Ecosystem & Conservation", "Range Management & Wildlife", "Agricultural Economics of Pakistan"];
+          }
+          if (lowerId === 'botany') {
+            return ["Plant Anatomy & Physiology", "Systematics & Taxonomy of Angiosperms", "Genetics & Molecular Biology", "Ecology & Environmental Botany", "Economic Botany & Biotechnology"];
+          }
+          if (lowerId === 'zoology') {
+            return ["Invertebrate and Vertebrate Diversity", "Cell Biology & Genetics", "Animal Physiology & Biochemistry", "Evolutionary Biology & Ecology", "Developmental Biology & Biotechnology"];
+          }
+          if (lowerId === 'english-literature') {
+            return ["Elizabethan & Jacobean Drama (Shakespeare)", "Romantic & Victorian Poetry", "19th & 20th Century English Novel", "Modern Drama & Literary Criticism", "Post-Colonial Literature in English"];
+          }
+          if (lowerId === 'urdu-literature') {
+            return ["Classical and Modern Urdu Poetry", "Development of Urdu Prose (Aligarh to Progressive)", "Urdu Novel & Short Stories", "Literary Criticism & Trends", "Urdu Drama & Essay Writing"];
+          }
+          if (lowerName.includes('political science')) {
+            return ["Western Political Thought", "Muslim Political Thought", "State & Sovereignty", "Political Ideologies", "Comparative Politics", "Political System of Pakistan", "Global Governance"];
+          }
+          if (lowerName.includes('international relations')) {
+            return ["Theories of IR", "Concepts of National Interest", "International Political Economy", "Cold War Dynamics", "Foreign Policies of Major Powers", "South Asian Security", "Weapons of Mass Destruction", "Contemporary Global Issues"];
+          }
+          if (lowerName.includes('economics')) {
+            return ["Microeconomics", "Macroeconomics", "Monetary & Fiscal Policies", "International Trade", "Economic Development", "Economy of Pakistan", "Agriculture & Industry", "Global Financial Institutions"];
+          }
+          if (lowerName.includes('public administration')) {
+            return ["Introduction to Public Admin", "Theories of Public Admin", "Policy Planning", "HR Management", "Financial Administration", "Governance & Local Govt", "Accountability", "Administrative Reforms in Pakistan"];
+          }
+          if (lowerName.includes('sociology')) {
+            return ["Concepts in Sociology", "Sociological Theories", "Culture & Socialization", "Social Stratification", "Social Institutions", "Social Change", "Research Methods", "Social Problems of Pakistan"];
+          }
+          if (lowerName.includes('criminology')) {
+            return ["Basic Concepts of Crime", "Theoretical Perspectives", "Juvenile Delinquency", "Criminal Justice System", "Punishment & Penology", "Cyber & White Collar Crimes", "Forensic Evidence", "Terrorism & Criminology"];
+          }
+          if (lowerName.includes('history') && lowerName.includes('usa')) {
+            return ["Early America & Colonization", "American Revolution", "US Constitution", "Civil War & Reconstruction", "Industrialization & Gilded Age", "World War I & II", "Cold War Era", "Contemporary USA"];
+          }
+          if (lowerName.includes('history') && (lowerName.includes('indopako') || lowerName.includes('indo-pak') || lowerName.includes('india') || lowerName.includes('pakistan'))) {
+            return ["Arrival of Muslims in Subcontinent", "Delhi Sultanate", "Mughal Empire", "British East India Company", "War of Independence 1857", "Aligarh Movement", "Pakistan Movement", "Post-Partition Challenges"];
+          }
+          if (lowerId === 'law' || lowerId === 'constitutional-law' || lowerId === 'international-law' || lowerId === 'muslim-law-jurisprudence' || lowerId === 'mercantile-law') {
+            return ["Jurisprudence (English & Islamic)", "Constitutional Law Principles", "Law of Torts and Contracts", "Criminal Procedure & Criminal Law", "Civil Procedure & Legal Procedure", "International Law Treaties", "Muslim Family Law & Inheritance", "Companies Act & Partnerships"];
+          }
+          if (lowerId === 'philosophy') {
+            return ["Introduction to Western Philosophy", "Epistemology and Metaphysics", "Logic & Inductive/Deductive Reasoning", "Ethics & Moral Theories", "Muslim Philosophy (Ibn Sina, Ghazali, Iqbal)", "Modern Contemporary Philosophy"];
+          }
+          if (lowerId === 'journalism-mass-comm') {
+            return ["Mass Communication Models & Theories", "News Reporting, Writing & Editing", "Media Laws and Ethics in Pakistan", "Public Relations & Advertising", "Digital Media & Online Journalism", "Development Support Communication"];
+          }
+          if (lowerId === 'psychology') {
+            return ["Biological Basis of Behavior", "Sensation, Perception, & Learning", "Memory, Thinking, and Intelligence", "Human Development and Personality", "Abnormal Psychology & Therapies", "Social Psychology & Group Dynamics"];
+          }
+          if (lowerId === 'geography') {
+            return ["Geomorphology & Climatology", "Oceanography & Biogeography", "Human, Economic & Urban Geography", "Geography of South Asia & Pakistan", "Cartography, Remote Sensing, & GIS"];
+          }
+          if (lowerId === 'anthropology') {
+            return ["Introduction to Cultural Anthropology", "Archaeology & Physical Anthropology", "Social Structure & Kinship Systems", "Economic & Political Anthropology", "Religion, Belief Systems & Rituals", "Applied Anthropology & Development"];
+          }
+          if (['punjabi', 'sindhi', 'pashto', 'balochi', 'arabic', 'persian'].includes(lowerId)) {
+            return ["Historical Development of Language", "Classical Poetry & Literary Masterpieces", "Modern Poetry & Prose Evolution", "Grammar, Syntax & Phonetics", "Translation, Essay Writing, & Composition"];
+          }
+          
+          return [
+            `Foundations of ${name}`,
+            `Historical Evolution`,
+            `Core Theories & Concepts`,
+            `Governance & Administration`,
+            `Contemporary Applications`,
+            `Issues & Challenges`,
+            `Local & Global Case Studies`,
+            `Future Prospects & Reforms`
+          ];
         };
-        fetchSyllabus();
+        setSyllabusTopics(getOfflineSyllabus(subject.name, subject.id));
       }
     }
   }, [subject]);
 
   const handleDomainSelect = async (domainName: string) => {
     setSelectedEssayDomain(domainName);
-    setLoadingDomainTopics(true);
     setErrorStatus(null);
 
+    if (PREDEFINED_ESSAY_TOPICS[domainName]) {
+      setEssayDomainTopics(PREDEFINED_ESSAY_TOPICS[domainName]);
+      return;
+    }
+
+    setLoadingDomainTopics(true);
     try {
       const topics = await getEssayTopicsForDomain(domainName);
       setEssayDomainTopics(topics);

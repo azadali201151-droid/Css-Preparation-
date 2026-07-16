@@ -2,8 +2,8 @@ import { Type } from "@google/genai";
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
-const FLASH_MODEL = "gemini-3.5-flash";
-const PRO_MODEL = "gemini-3.5-flash"; 
+const FLASH_MODEL = "gemini-2.5-flash";
+const PRO_MODEL = "gemini-2.5-flash"; 
 
 async function safeGenerateContent(primaryModel: string, contents: any, config?: any, retries: number = 3): Promise<any> {
   try {
@@ -110,6 +110,168 @@ export async function generateTest(subjectName: string, level: string = 'interme
 
 export async function getSyllabusBreakdown(subjectName: string) {
   const subjectId = subjectName.trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const subj = subjectName.toLowerCase();
+  
+  // High-priority subjects predefined for offline availability
+  let predefined: string[] = [];
+  if (subj.includes("pakistan affairs")) {
+    predefined = [
+      "Evolution of Muslim Society in the Sub-Continent",
+      "Ideology of Pakistan and its Implementation",
+      "The Pakistan Movement (1940-1947)",
+      "Constitutional and Political History of Pakistan Since 1947",
+      "Foreign Policy of Pakistan post-9/11",
+      "Economic Challenges and Structural Reforms in Pakistan",
+      "Social Issues: Education, Poverty, and Population Growth",
+      "Civil-Military Relations and Democratic Development",
+      "Water Crisis, Energy Shortages, and Circular Debt",
+      "Geostrategic Importance of Pakistan & CPEC"
+    ];
+  } else if (subj.includes("current affairs")) {
+    predefined = [
+      "Global Power Dynamics and United States-China Rivalry",
+      "The Kashmir Issue: Historical Roots and Contemporary Dynamics",
+      "Middle East Crisis, Abraham Accords, and Regional Realities",
+      "Climate Change, COP Conferences, and Developing Nations",
+      "The Rise of Artificial Intelligence and Cyber Warfare",
+      "Global Economic Governance: IMF, World Bank, and FATF",
+      "The South Asian Geopolitics and CPEC's Impact",
+      "Nuclear Non-Proliferation, JCPOA, and Global Security",
+      "Sovereign Debt Crises and Inflationary Pressures",
+      "Pakistan's External Relations: US, China, Russia, and Muslim World"
+    ];
+  } else if (subj.includes("islamic studies") || subj.includes("islamiat")) {
+    predefined = [
+      "Concept of Islam: Deen and Religion, Distinctive Characteristics",
+      "Islamic Beliefs: Tauheed, Prophethood, Akhirah and their Impact on Human Life",
+      "Fundamental Duties and Worships in Islam",
+      "Sources of Islamic Shariah and Jurisprudence",
+      "Islamic Political, Economic, and Social Systems",
+      "Human Rights, Women's Rights, and Minority Rights in Islam",
+      "The Concept of State and Governance in Islam (Khilafat & Democracy)",
+      "Islam and Modernity: Challenges of Social Media, Science, and Secularism",
+      "Peace and Co-existence: Treaty of Hudaybiyyah and Medina Charter",
+      "Sufism, Spiritual Purification (Tasawwuf), and Moral Development"
+    ];
+  } else if (subj.includes("general science")) {
+    predefined = [
+      "Cosmology, Universe, Earth Structure, and Solar System",
+      "Atmospheric Science, Climate Change, and Environmental Degradation",
+      "Life Sciences: Human Anatomy, Cells, Diseases, and Vaccines",
+      "Energy Resources: Renewable, Non-renewable, and Conservation",
+      "Modern Technologies: IT, Telecommunications, AI, and Robotics",
+      "Quantitative Ability: Basic Mathematics, Algebra, and Geometry",
+      "Logical Reasoning and Analytical Ability",
+      "Mental Abilities: Pattern Recognition, Series, and Word Puzzles",
+      "Food Science, Balanced Diet, and Food Security",
+      "Natural Disasters: Earthquakes, Floods, and Disaster Management"
+    ];
+  } else if (subj.includes("essay")) {
+    predefined = [
+      "CSS Essay Outline Strategy & Formulating a Thesis Statement",
+      "Structuring the Explanatory Hook and Introduction Para",
+      "Creating Paragraph Unity (PEEL Method) & Smooth Transitions",
+      "Socio-Economic Narratives: Digital Economy and Poverty Alleviation",
+      "Political Governance: Civil Service Reforms and Decentralization",
+      "Global Dynamics: Multipolarity, US-China Relations, and Trade Wars",
+      "Human Security: Water Crises, Education Disparities, and Gender",
+      "Technological Shifts: Artificial Intelligence and Cyber Governance",
+      "Strategic Writing: Incorporating Facts, Statistics, and Key Quotes",
+      "Aesthetic Polish: Elegant Conclusions and Editing Techniques"
+    ];
+  } else if (subj.includes("political science")) {
+    predefined = [
+      "Western Political Thought: Plato to Marx",
+      "Muslim Political Thought: Al-Farabi to Iqbal",
+      "State System, Sovereignty, and Concept of Rights",
+      "Political Ideologies: Capitalism, Socialism, Fascism",
+      "Comparative Politics: Constitutions of USA, UK, and France",
+      "Political System of Pakistan",
+      "International Relations vs Political Science",
+      "Global Governance and Organizations"
+    ];
+  } else if (subj.includes("international relations")) {
+    predefined = [
+      "Theories of IR: Realism, Liberalism, Constructivism",
+      "Concepts: National Interest, Balance of Power, Deterrence",
+      "International Political Economy",
+      "Cold War and Post-Cold War Global Dynamics",
+      "Foreign Policies of Major Powers (USA, China, Russia)",
+      "South Asian Politics and Security Dilemma",
+      "Weaponization, Disarmament, and Non-Proliferation",
+      "Emerging Issues: Climate Change, Terrorism, and Cyber Security"
+    ];
+  } else if (subj.includes("criminology")) {
+    predefined = [
+      "Basic Concepts: Crime, Criminality, Deviance",
+      "Theoretical Perspectives in Criminology",
+      "Juvenile Delinquency and Justice System",
+      "Criminal Justice System: Police, Courts, Prisons",
+      "Punishment and Theories of Penology",
+      "Cyber Crime and White Color Crimes",
+      "Criminal Investigation and Forensic Evidence",
+      "Terrorism and Criminology Perspectives"
+    ];
+  } else if (subj.includes("public administration")) {
+    predefined = [
+      "Introduction to Public Administration",
+      "Theories of Public Administration",
+      "Public Policy Planning and Implementation",
+      "Human Resource Management in Public Sector",
+      "Financial Administration and Budgeting",
+      "Governance, Devolution, and Local Governments",
+      "Accountability and Control System",
+      "Administrative Reforms in Pakistan"
+    ];
+  } else if (subj.includes("sociology")) {
+    predefined = [
+      "Introduction and Concepts in Sociology",
+      "Sociological Theories (Marx, Durkheim, Weber)",
+      "Culture, Society, and Socialization",
+      "Social Stratification and Mobility",
+      "Social Institutions: Family, Religion, Education",
+      "Social Change and Social Movements",
+      "Sociological Research Methods",
+      "Social Problems of Pakistan (Poverty, Gender Issues)"
+    ];
+  } else if (subj.includes("history")) {
+    predefined = [
+      "Ancient Civilizations and their Fall",
+      "Medieval Era and The Renaissance",
+      "Colonialism and Imperialism",
+      "Major Revolutions: French, American, Russian",
+      "World War I & World War II",
+      "Cold War Dynamics",
+      "Decolonization and Making of the Modern World",
+      "Contemporary Global Historical Trends"
+    ];
+  } else if (subj.includes("economics")) {
+    predefined = [
+      "Microeconomics: Consumer Behavior and Market Structures",
+      "Macroeconomics: National Income and Employment Theories",
+      "Monetary and Fiscal Policies",
+      "International Economics and Trade Theory",
+      "Economic Development and Growth Models",
+      "Economy of Pakistan: Issues and Challenges",
+      "Agriculture and Industrial Sectors in Pakistan",
+      "Global Financial Institutions (IMF, World Bank, WTO)"
+    ];
+  } else {
+    predefined = [
+      `Foundational Principles of ${subjectName}`,
+      `Historical Context & Evolution of ${subjectName}`,
+      `Theoretical Frameworks & Core Concepts in ${subjectName}`,
+      `Contemporary Challenges & Debates of ${subjectName}`,
+      `Analytical Frameworks for Examiners' Questions in ${subjectName}`,
+      `Case Studies of ${subjectName}: Pakistan and Global Scale`,
+      `Policy Recommendations, Reforms, and Future Strategy`,
+      `Key Thinkers, Reports, and Scholarly Views on ${subjectName}`
+    ];
+  }
+  
+  if (predefined.length > 0) {
+    return predefined;
+  }
 
   // 1. Check Cache
   try {
@@ -207,6 +369,7 @@ export async function getFullTopicNotes(subjectName: string, topic: string) {
 
   const prompt = `You are a legendary CSS (Central Superior Services Pakistan) mentor and senior FPSC paper checker with over a decade of checking experience. 
   Provide highly high-yield, deeply analytical study notes for the topic "${topic}" in the subject "${subjectName}" tailored exactly to how a candidate should prepare.
+  Ensure that your detailed material strictly follows all official guidelines of FPSC, and incorporates all available experiences of past experts and toppers.
   
   Do not just list general syllabus definitions; act as a decadal examiner who points out:
   1. 📘 SUB-TOPICS & CONCEPTS: What are the exact crucial subthemes, concepts, or theoretical frameworks the student needs to build for this specific topic?
@@ -251,6 +414,7 @@ export async function getTopicGuidance(subjectName: string, topic: string) {
 
   const prompt = `You are a legendary CSS (Central Superior Services Pakistan) mentor with over a decade of experience guiding candidates and grading FPSC papers.
   Provide a highly targeted, realistic, and master-level Preparation & Guidance Masterclass for the topic "${topic}" in the subject "${subjectName}".
+  Ensure that your masterclass strictly follows all official guidelines of FPSC, and incorporates all available experiences of past experts and toppers.
   
   Do not just copy or cover general syllabus definitions. Instead, act as a legendary, brutal mentor who clearly guides the student about:
   
@@ -419,6 +583,7 @@ export async function cssMentorChat(history: { role: 'user' | 'model', content: 
   Your goal is to prepare candidates powerfully and conceptually. 
   You have vast knowledge of compulsory and optional subjects, past papers, examiner reports, and toppers' experiences.
   You provide guidance on syllabus, study materials, answer writing techniques, and time management.
+  Ensure ALL your advice, notes, and guidance strictly follow the official guidelines of FPSC, and incorporate all available experiences of past experts and toppers.
   Be encouraging, professional, and highly informative.`;
 
   const formattedHistory = history.map(h => ({

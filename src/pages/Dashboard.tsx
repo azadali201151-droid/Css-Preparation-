@@ -115,6 +115,23 @@ export default function Dashboard() {
           </section>
         </div>
       </div>
+
+      <footer className="mt-12 bg-[#141414] text-white p-8 rounded-3xl relative overflow-hidden">
+        <div className="absolute right-0 bottom-0 top-0 w-1/2 bg-gradient-to-l from-blue-500/10 to-transparent pointer-events-none" />
+        <div className="relative z-10 max-w-4xl mx-auto text-center space-y-6">
+          <h3 className="text-2xl font-serif italic mb-4">Dedicated to CSS Aspirants</h3>
+          <p className="opacity-80 leading-relaxed font-medium text-sm">
+            This platform is designed to guide you 100% in the right direction for your CSS preparation. Backed by extensive experience and built strictly according to official FPSC guidelines, it serves as a highly effective, modern alternative to traditional academies. We are committed to supporting those who cannot afford expensive academy fees by providing top-tier, AI-powered mentorship, rigorous evaluation systems, and authentic resources—accessible to everyone.
+          </p>
+          <div className="pt-6 border-t border-white/10 flex flex-col items-center justify-center gap-1 opacity-70">
+            <p className="text-[11px] font-bold tracking-widest uppercase mb-2">Created By</p>
+            <p className="text-lg font-serif italic">Azad Ali</p>
+            <a href="mailto:azadali201151@gmail.com" className="text-sm hover:text-blue-300 transition-colors">
+              azadali201151@gmail.com
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
