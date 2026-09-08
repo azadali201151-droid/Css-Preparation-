@@ -1,0 +1,14 @@
+--- server.ts
++++ server.ts
+@@ -100,8 +100,10 @@
+             ])});
+          }
+          if (req.body.config?.responseSchema?.type === "OBJECT") {
++            const match = contentsStr.match(/Dictionary for CSS: "(.*?)"/i);
++            const extractedWord = match ? match[1] : "Word";
+             return res.json({ text: JSON.stringify({
+-              const match = contentsStr.match(/Dictionary for CSS: "(.*?)"/i); const extractedWord = match ? match[1] : "Word"; word: extractedWord + " (Mock Data)",
++              word: `${extractedWord} (Mock Data)`,
+               urduMeanings: ["عملی", "حقیقت پسندانہ"],
+               pronunciation: "پریگمیٹک",
+               explanationUrdu: "مسائل کو حل کرنے کے عملی اور حقیقت پسندانہ طریقے۔ (یہ ڈیٹا کوٹہ ختم ہونے کی وجہ سے عارضی ہے)",

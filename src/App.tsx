@@ -32,6 +32,7 @@ import Forum from './pages/Forum';
 import Dictionary from './pages/Dictionary';
 import AIAssistant from './pages/AIAssistant';
 import DictionaryOverlay from './components/DictionaryOverlay';
+import MPT from './pages/MPT';
 
 export default function App() {
   const [user, setUser] = useState<any>(null);
@@ -106,6 +107,7 @@ export default function App() {
               <SidebarLink to="/" icon={<Home size={20} />} label="Dashboard" onClick={() => setSidebarOpen(false)} />
               <SidebarLink to="/subjects" icon={<BookOpen size={20} />} label="Subjects" onClick={() => setSidebarOpen(false)} />
               <SidebarLink to="/ai-assistant" icon={<Brain size={20} />} label="AI Mentor" onClick={() => setSidebarOpen(false)} />
+              <SidebarLink to="/mpt" icon={<BookMarked size={20} />} label="CSS MPT" onClick={() => setSidebarOpen(false)} />
               <SidebarLink to="/forum" icon={<MessageSquare size={20} />} label="Community" onClick={() => setSidebarOpen(false)} />
               <SidebarLink to="/dictionary" icon={<Languages size={20} />} label="Translator" onClick={() => setSidebarOpen(false)} />
             </nav>
@@ -163,6 +165,7 @@ export default function App() {
                 <Route path="/forum" element={<Forum user={user} login={login} />} />
                 <Route path="/dictionary" element={<Dictionary />} />
                 <Route path="/ai-assistant" element={<AIAssistant user={user} login={login} />} />
+                <Route path="/mpt" element={<MPT />} />
               </Routes>
             </AnimatePresence>
           </main>

@@ -99,10 +99,12 @@ async function startServer() {
             ])});
          }
          if (req.body.config?.responseSchema?.type === "OBJECT") {
+            const match = contentsStr.match(/Dictionary for CSS:\s*\\?["'](.*?)\\?["']/i);
+            const extractedWord = match ? match[1] : "Word";
             return res.json({ text: JSON.stringify({
-              word: "Pragmatic (Mock Data)",
-              urduMeanings: ["عملی", "حقیقت پسندانہ"],
-              pronunciation: "پریگمیٹک",
+              word: `${extractedWord} (Mock Data)`,
+              urduMeanings: ["(معنی دستیاب نہیں)"],
+              pronunciation: "(تلفظ)",
               explanationUrdu: "مسائل کو حل کرنے کے عملی اور حقیقت پسندانہ طریقے۔ (یہ ڈیٹا کوٹہ ختم ہونے کی وجہ سے عارضی ہے)",
               examples: [
                 {
@@ -113,6 +115,11 @@ async function startServer() {
             })});
          }
          return res.json({ text: "[]" });
+      }
+      const systemStr = typeof req.body.config?.systemInstruction === "string" ? req.body.config.systemInstruction : JSON.stringify(req.body.config?.systemInstruction || "");
+      const isChat = systemStr.toLowerCase().includes("mentor") || contentsStr.toLowerCase().includes("mentor") || (Array.isArray(req.body.contents) && req.body.contents.length > 1);
+      if (isChat) {
+         return res.json({ text: "Hello! I am your AI Mentor. I am currently running in offline mock mode due to API key limits. When you provide a valid API key in settings, I will provide personalized guidance on syllabus, study materials, answer writing techniques, and time management based on official FPSC guidelines! For now, how can I help you conceptually?" });
       }
 
       return res.json({ 

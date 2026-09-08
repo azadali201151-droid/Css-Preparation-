@@ -586,12 +586,19 @@ export async function cssMentorChat(history: { role: 'user' | 'model', content: 
   Ensure ALL your advice, notes, and guidance strictly follow the official guidelines of FPSC, and incorporate all available experiences of past experts and toppers.
   Be encouraging, professional, and highly informative.`;
 
-  const formattedHistory = history.map(h => ({
+  let validHistory = history;
+  while (validHistory.length > 0 && validHistory[0].role === 'model') {
+    validHistory = validHistory.slice(1);
+  }
+
+  const formattedHistory = validHistory.map(h => ({
     role: h.role,
     parts: [{ text: h.content }]
   }));
 
-  const response = await safeGenerateContent(FLASH_MODEL, [{ role: 'user', parts: [{ text: userMessage }] }], {
+  const contents = [...formattedHistory, { role: 'user', parts: [{ text: userMessage }] }];
+
+  const response = await safeGenerateContent(FLASH_MODEL, contents, {
     systemInstruction
   });
 

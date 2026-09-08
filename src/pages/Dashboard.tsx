@@ -124,11 +124,17 @@ export default function Dashboard() {
             This platform is designed to guide you 100% in the right direction for your CSS preparation. Backed by extensive experience and built strictly according to official FPSC guidelines, it serves as a highly effective, modern alternative to traditional academies. We are committed to supporting those who cannot afford expensive academy fees by providing top-tier, AI-powered mentorship, rigorous evaluation systems, and authentic resources—accessible to everyone.
           </p>
           <div className="pt-6 border-t border-white/10 flex flex-col items-center justify-center gap-1 opacity-70">
-            <p className="text-[11px] font-bold tracking-widest uppercase mb-2">Created By</p>
-            <p className="text-lg font-serif italic">Azad Ali</p>
-            <a href="mailto:azadali201151@gmail.com" className="text-sm hover:text-blue-300 transition-colors">
-              azadali201151@gmail.com
-            </a>
+            <p className="text-[11px] font-bold tracking-widest uppercase mb-2">Contact Us / Created By</p>
+            <p className="text-lg font-serif italic mb-1">Azad Ali</p>
+            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 mt-2">
+              <a href="mailto:azadali201151@gmail.com" className="text-sm hover:text-blue-300 transition-colors">
+                azadali201151@gmail.com
+              </a>
+              <span className="hidden sm:inline opacity-30">|</span>
+              <a href="https://wa.me/923141201151" target="_blank" rel="noopener noreferrer" className="text-sm hover:text-green-400 transition-colors">
+                WhatsApp: 03141201151
+              </a>
+            </div>
           </div>
         </div>
       </footer>
