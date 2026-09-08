@@ -156,7 +156,7 @@ export default function App() {
           <main className="flex-1 overflow-y-auto">
             <AnimatePresence mode="wait">
               <Routes>
-                <Route path="/" element={<Dashboard />} />
+                <Route path="/" element={<Dashboard user={user} />} />
                 <Route path="/subjects" element={<SubjectsList />} />
                 <Route path="/subjects/compulsory" element={<CompulsorySubjects />} />
                 <Route path="/subjects/optional" element={<OptionalSubjects />} />

@@ -1,8 +1,49 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { BookOpen, Brain, Users, TrendingUp, Award, Clock, Search, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
-export default function Dashboard() {
+export default function Dashboard({ user }: { user?: any }) {
+  const [stats, setStats] = useState({
+    subjectsCovered: 0,
+    testsCompleted: 0,
+    averageScore: 0,
+    studyHours: 0
+  });
+
+  useEffect(() => {
+    const loadStats = async () => {
+      if (!user) return;
+      try {
+        const attemptsRef = collection(db, `userProfiles/${user.uid}/testAttempts`);
+        const snapshot = await getDocs(attemptsRef);
+        
+        let totalScore = 0;
+        let totalPossible = 0;
+        const uniqueSubjects = new Set();
+        
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          uniqueSubjects.add(data.subjectId);
+          totalScore += data.score || 0;
+          totalPossible += data.totalQuestions || 0;
+        });
+        
+        setStats({
+          subjectsCovered: uniqueSubjects.size,
+          testsCompleted: snapshot.size,
+          averageScore: totalPossible > 0 ? Math.round((totalScore / totalPossible) * 100) : 0,
+          studyHours: Math.round(snapshot.size * 0.5)
+        });
+      } catch (e) {
+        console.error("Error loading stats", e);
+      }
+    };
+    loadStats();
+  }, [user]);
+
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto space-y-8">
       <header>
@@ -11,17 +52,19 @@ export default function Dashboard() {
           animate={{ opacity: 1, y: 0 }}
           className="text-4xl font-serif italic mb-2"
         >
-          Welcome, Aspirant.
+          Welcome, {user ? user.displayName?.split(' ')[0] || 'Aspirant' : 'Aspirant'}.
         </motion.h2>
-        <p className="text-lg opacity-60">Your journey to the Civil Service Commission starts here.</p>
+        <p className="text-lg opacity-60">
+          {user ? 'Track your progress and continue your CSS preparation.' : 'Your journey to the Civil Service Commission starts here. Log in to track your progress.'}
+        </p>
       </header>
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard icon={<BookOpen className="text-blue-500" />} label="Subjects Covered" value="6/34" sub="Curriculum progress" />
-        <StatCard icon={<Brain className="text-purple-500" />} label="Tests Completed" value="12" sub="Across all subjects" />
-        <StatCard icon={<Award className="text-orange-500" />} label="Average Score" value="84%" sub="Rank percentile: top 5%" />
-        <StatCard icon={<Clock className="text-gray-500" />} label="Study Hours" value="142h" sub="Total focus time" />
+        <StatCard icon={<BookOpen className="text-blue-500" />} label="Subjects Practiced" value={user ? `${stats.subjectsCovered}/34` : "0/34"} sub={user ? "Curriculum progress" : "Login to track"} />
+        <StatCard icon={<Brain className="text-purple-500" />} label="Tests Completed" value={user ? stats.testsCompleted.toString() : "0"} sub={user ? "Across all subjects" : "Login to track"} />
+        <StatCard icon={<Award className="text-orange-500" />} label="Average Score" value={user ? `${stats.averageScore}%` : "0%"} sub={user ? "Based on AI Tests" : "Login to track"} />
+        <StatCard icon={<Clock className="text-gray-500" />} label="Estimated Hours" value={user ? `${stats.studyHours}h` : "0h"} sub={user ? "Active test time" : "Login to track"} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
